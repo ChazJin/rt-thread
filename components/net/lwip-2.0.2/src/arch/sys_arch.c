@@ -50,6 +50,8 @@
 
 #include <string.h>
 
+extern volatile uint32_t enet_init_status;
+
 /*
  * Initialize the network interface device
  *
@@ -133,9 +135,10 @@ static void tcpip_init_done_callback(void *arg)
             netif_set_up(ethif->netif);
 #endif
 
-            if (ethif->flags & ETHIF_LINK_PHYUP)
+            if(enet_init_status != 0)
             {
-                netif_set_link_up(ethif->netif);
+            /* set link_up for this netif */
+            netif_set_link_up(ethif->netif);
             }
 
             UNLOCK_TCPIP_CORE();
@@ -508,7 +511,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
             t = timeout / (1000/RT_TICK_PER_SECOND);
     }
 
-    ret = rt_mb_recv(*mbox, (rt_ubase_t *)msg, t);
+    ret = rt_mb_recv(*mbox, (rt_uint32_t *)msg, t);
 
     if(ret == -RT_ETIMEOUT)
         return SYS_ARCH_TIMEOUT;
@@ -539,7 +542,7 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
 {
     int ret;
 
-    ret = rt_mb_recv(*mbox, (rt_ubase_t *)msg, 0);
+    ret = rt_mb_recv(*mbox, (rt_uint32_t *)msg, 0);
 
     if(ret == -RT_ETIMEOUT)
         return SYS_ARCH_TIMEOUT;
